@@ -9,12 +9,6 @@ impl Branch {
     pub fn new(path: PathBuf) -> Branch {
         let name = path.file_name().unwrap().to_str().unwrap().to_string();
         let is_dir = path.is_dir();
-        if is_dir {
-            return Branch {
-                name: format!("{}/", name),
-                is_dir
-            };
-        }
         Branch { name, is_dir }
     }
 
