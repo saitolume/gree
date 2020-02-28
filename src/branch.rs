@@ -17,4 +17,12 @@ impl Branch {
         }
         Branch { name, is_dir }
     }
+
+    pub fn println(&self, is_last: bool) {
+        if is_last {
+            println!("└── {}", &self.name);
+        } else {
+            println!("├── {}", &self.name);
+        }
+    }
 }
