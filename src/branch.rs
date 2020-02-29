@@ -32,12 +32,10 @@ impl Branch {
         })
     }
 
-    pub fn println(&self, is_last: bool) {
-        let path = &self.path.to_str().unwrap().to_string();
+    pub fn row(&self, is_last: bool) -> String {
+        let path = self.path.to_str().unwrap().to_string();
         let pattern = Regex::new(r"([^/]+/)").unwrap();
-        let result =
-            pattern.replace_all(path, |_: &Captures| if is_last { "└── " } else { "├── " });
-        println!("{}", result);
+        pattern.replace_all(&path, |_: &Captures| if is_last { "└── " } else { "├── " }).to_string()
     }
 
     pub fn read_children(

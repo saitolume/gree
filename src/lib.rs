@@ -2,6 +2,7 @@ pub mod branch;
 pub mod config;
 pub mod reader;
 
+use std::io::{self, BufWriter, Write};
 use std::path::Path;
 
 use branch::Branch;
@@ -15,11 +16,14 @@ pub fn run(config: Config) -> Result<(), Error> {
 
     branches.sort_by(|a, b| a.path.cmp(&b.path));
 
-    println!("{}", config.path);
+    let stdout = io::stdout();
+    let mut output = BufWriter::new(stdout.lock());
+
+    writeln!(output, "{}", config.path).unwrap();
     for (i, branch) in branches.iter().enumerate() {
-        branch.println(i == branches.len() - 1);
+        writeln!(output, "{}", branch.row(i == branches.len() - 1)).unwrap();
     }
-    println!("\n{} directories, {} files", dir_count, file_count);
+    writeln!(output, "\n{} directories, {} files", dir_count, file_count).unwrap();
 
     Ok(())
 }
