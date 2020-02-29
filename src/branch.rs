@@ -18,22 +18,30 @@ pub struct State {
 }
 
 impl Branch {
-    pub fn new(path: PathBuf) -> Branch {
+    pub fn new(path: PathBuf) -> Result<Branch, Error> {
         let is_dir = path.is_dir();
-        let name = path.file_name().unwrap().to_str().unwrap().to_string();
         let mut depth: u32 = 0;
-
-        let pattern = Regex::new(r"([^/]+/)").unwrap();
+        let pattern = Regex::new(r"([^/]+/)")?;
         for _ in pattern.captures_iter(&path.to_str().unwrap().to_string()) {
             depth += 1
         }
 
-        Branch {
-            name,
-            path,
-            is_dir,
-            depth,
+        if let Some(name) = path.file_name() {
+            Ok(Branch {
+                name: name.to_str().unwrap().to_string(),
+                path,
+                is_dir,
+                depth,
+            })
+        } else {
+            Ok(Branch {
+                name: path.to_str().unwrap().to_string(),
+                path,
+                is_dir,
+                depth,
+            })
         }
+
     }
 
     pub fn println(&self, is_last: bool) {
@@ -44,19 +52,19 @@ impl Branch {
         println!("{}", result);
     }
 
-    pub fn child_node(&self, ignore_files: &Vec<String>) -> Result<State, Error> {
+    pub fn read_children(&self, ignore_files: &Vec<String>) -> Result<State, Error> {
         let dir = fs::read_dir(&self.path)?;
         let mut branches: Vec<Branch> = vec![];
         let mut dir_count: u32 = 0;
         let mut file_count: u32 = 0;
 
         for entry in dir {
-            let branch = Branch::new(entry?.path());
+            let branch = Branch::new(entry?.path())?;
             if ignore_files.contains(&branch.name) {
                 continue;
             }
             if branch.is_dir {
-                let state = branch.child_node(ignore_files)?;
+                let state = branch.read_children(ignore_files)?;
                 branches.extend(state.branches);
             }
             if branch.is_dir {
