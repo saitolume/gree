@@ -26,22 +26,16 @@ impl Branch {
             depth += 1
         }
 
-        if let Some(name) = path.file_name() {
-            Ok(Branch {
-                name: name.to_str().unwrap().to_string(),
-                path,
-                is_dir,
-                depth,
-            })
-        } else {
-            Ok(Branch {
-                name: path.to_str().unwrap().to_string(),
-                path,
-                is_dir,
-                depth,
-            })
-        }
-
+        Ok(Branch {
+            name: if path.file_name().is_some() {
+                path.file_name().unwrap().to_str().unwrap().to_string()
+            } else {
+                path.to_str().unwrap().to_string()
+            },
+            path,
+            is_dir,
+            depth,
+        })
     }
 
     pub fn println(&self, is_last: bool) {
