@@ -50,7 +50,12 @@ impl Branch {
         let mut file_count: u32 = 0;
 
         for entry in dir {
-            let branch = Branch::new(entry?.path())?;
+            let path = entry?.path();
+            if path.file_name().unwrap().to_str().unwrap().starts_with(".") {
+                continue;
+            }
+
+            let branch = Branch::new(path)?;
             if ignore_files.contains(&branch.name) {
                 continue;
             }
