@@ -11,12 +11,6 @@ pub struct Branch {
     pub depth: u32,
 }
 
-pub struct State {
-    pub dir_count: u32,
-    pub file_count: u32,
-    pub branches: Vec<Branch>,
-}
-
 impl Branch {
     pub fn new(path: PathBuf) -> Result<Branch, Error> {
         let is_dir = path.is_dir();
@@ -46,7 +40,10 @@ impl Branch {
         println!("{}", result);
     }
 
-    pub fn read_children(&self, ignore_files: &Vec<String>) -> Result<State, Error> {
+    pub fn read_children(
+        &self,
+        ignore_files: &Vec<String>,
+    ) -> Result<(std::vec::Vec<Branch>, u32, u32), Error> {
         let dir = fs::read_dir(&self.path)?;
         let mut branches: Vec<Branch> = vec![];
         let mut dir_count: u32 = 0;
@@ -59,20 +56,16 @@ impl Branch {
             }
 
             if branch.is_dir {
-                let state = branch.read_children(ignore_files)?;
-                dir_count += state.dir_count + 1;
-                file_count += state.file_count;
-                branches.extend(state.branches);
+                let (children, c_dir_count, c_file_count) = branch.read_children(ignore_files)?;
+                dir_count += c_dir_count + 1;
+                file_count += c_file_count;
+                branches.extend(children);
             } else {
                 file_count += 1;
             }
             branches.push(branch);
         }
 
-        Ok(State {
-            dir_count,
-            file_count,
-            branches,
-        })
+        Ok((branches, dir_count, file_count))
     }
 }

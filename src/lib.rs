@@ -11,15 +11,10 @@ use failure::Error;
 pub fn run(config: Config) -> Result<(), Error> {
     let ignore_files = reader::read_ignore(&config.path);
     let branch = Branch::new((&Path::new(&config.path)).to_path_buf())?;
-
-    let state = branch.read_children(&ignore_files)?;
-    let mut branches = state.branches;
-    let dir_count = state.dir_count;
-    let file_count = state.file_count;
+    let (mut branches, dir_count, file_count) = branch.read_children(&ignore_files)?;
 
     branches.sort_by(|a, b| a.path.cmp(&b.path));
 
-    // Output
     println!("{}", config.path);
     for (i, branch) in branches.iter().enumerate() {
         branch.println(i == branches.len() - 1);
