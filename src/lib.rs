@@ -1,5 +1,3 @@
-extern crate failure;
-
 pub mod branch;
 pub mod config;
 pub mod reader;
@@ -8,26 +6,35 @@ use std::fs;
 
 use branch::Branch;
 use config::Config;
+use failure::Error;
 
-pub fn run(config: Config) -> Result<(), failure::Error> {
+pub fn run(config: Config) -> Result<(), Error> {
     let dir = fs::read_dir(&config.path)?;
-    let ignore_files = reader::read_ignore().unwrap();
+    let ignore_files = reader::read_ignore(&config.path);
     let mut branches: Vec<Branch> = vec![];
     let mut dir_count: u32 = 0;
     let mut file_count: u32 = 0;
 
     for entry in dir {
-        let path = entry.unwrap().path();
-        let branch = Branch::new(path);
-
-        let contains = ignore_files.contains(&branch.name);
-        if contains { continue }
-
-        if branch.is_dir { dir_count += 1 } else { file_count += 1 }
+        let branch = Branch::new(entry?.path());
+        if ignore_files.contains(&branch.name) {
+            continue;
+        }
+        if branch.is_dir {
+            let state = branch.child_node(&ignore_files)?;
+            branches.extend(state.branches);
+            dir_count += state.dir_count;
+            file_count += state.file_count;
+        }
+        if branch.is_dir {
+            dir_count += 1
+        } else {
+            file_count += 1
+        }
         branches.push(branch);
     }
 
-    branches.sort_by(|a, b| a.name.cmp(&b.name));
+    branches.sort_by(|a, b| a.path.cmp(&b.path));
 
     // Output
     println!("{}", config.path);
