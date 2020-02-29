@@ -63,17 +63,18 @@ impl Branch {
             if ignore_files.contains(&branch.name) {
                 continue;
             }
+
             if branch.is_dir {
                 let state = branch.read_children(ignore_files)?;
+                dir_count += state.dir_count + 1;
+                file_count += state.file_count;
                 branches.extend(state.branches);
-            }
-            if branch.is_dir {
-                dir_count += 1
             } else {
-                file_count += 1
+                file_count += 1;
             }
             branches.push(branch);
         }
+
         Ok(State {
             dir_count,
             file_count,
